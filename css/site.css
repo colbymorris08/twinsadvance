@@ -52,6 +52,8 @@ body {
 }
 .page { padding: 28px; max-width: 1280px; margin: 0 auto; }
 h1 { font-size: 28px; margin: 0 0 8px; }
+h2.view-title { font-size: 18px; margin: 22px 0 8px; }
+.print-sheet { display: none; }
 .lede, .note { color: var(--muted); line-height: 1.5; }
 .controls {
   display: flex;
@@ -107,7 +109,7 @@ td.blank { background: #fff; color: #9ca3af; }
 .footnotes { margin-top: 22px; display: grid; gap: 12px; }
 .footnotes p { margin: 0; color: #c5d0e0; font-size: 13px; line-height: 1.5; }
 .status { color: var(--gold); }
-button.export {
+.export {
   font: inherit;
   color: #fff;
   font-weight: 700;
@@ -118,6 +120,8 @@ button.export {
   border-radius: 8px;
   padding: 8px 14px;
   cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
 }
 @media (max-width: 720px) {
   .page, .topbar { padding-left: 14px; padding-right: 14px; }
@@ -125,21 +129,19 @@ button.export {
 @media print {
   @page { size: landscape; margin: 0.45in; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  body { background: #fff; color: #111; }
-  .topbar {
+  .screen { display: none !important; }
+  .print-sheet {
+    display: block;
     background: #fff;
-    border-bottom: 2px solid var(--navy);
-    padding: 0 0 10px;
+    color: #111;
   }
-  .logo { height: 42px; }
-  .brand strong, .brand span { color: var(--navy); }
-  .tab, .controls, .groups, .status { display: none !important; }
-  .print-head { display: block; color: var(--navy); font-size: 16px; font-weight: 700; }
-  .lede, .note, .league, .footnotes p { color: #1a1a1a; }
-  .league, .wrap, .groups div { background: #fff; }
-  .page { padding: 0; max-width: none; }
-  table { min-width: 0; }
-  th { position: static; }
-  tr, td, th { break-inside: avoid; }
-  .footnotes { break-inside: avoid; }
+  .print-sheet .logo { height: 42px; width: auto; }
+  .print-sheet h1 { font-size: 22px; margin: 8px 0; color: #111; }
+  .print-sheet p { margin: 0 0 4px; color: #111; font-size: 14px; }
+  .print-sheet .color-key { margin-top: 12px; font-size: 11px; }
+  .print-sheet .wrap { border-color: var(--navy); }
+  .print-sheet table { min-width: 0; width: 100%; }
+  .print-sheet th { position: static; font-size: 11px; }
+  .print-sheet td { font-size: 11px; }
+  .print-sheet tr, .print-sheet td, .print-sheet th { break-inside: avoid; }
 }

@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="css/site.css">
 </head>
 <body>
+<div class="screen">
 <header class="topbar">
   <div class="brand">
     <img class="logo" src="site/assets/minnesota-twins.svg" alt="Minnesota Twins">
@@ -22,18 +23,19 @@
 </header>
 <main class="page">
   <h1>Hitter sheet</h1>
-  <p class="print-head" id="print-head"></p>
   <p class="lede" id="subtitle"></p>
   <div class="controls">
     <label>Month
       <select id="month" aria-label="Month"></select>
     </label>
+    <a class="export" href="#last10">Last 10 games</a>
     <button type="button" class="export" id="export-pdf">Export PDF</button>
     <p class="status" id="status"></p>
   </div>
   <p class="note" id="roster"></p>
   <div class="groups" id="groups"></div>
   <p class="league" id="league"></p>
+  <h2 class="view-title" id="month-line"></h2>
   <div class="wrap">
     <table id="sheet">
       <thead>
@@ -46,8 +48,25 @@
           <th>RISP knock-in</th>
           <th>Move-over</th>
           <th>QAB</th>
-          <th>PA</th>
-          <th>Games</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <h2 class="view-title" id="last10">Last 10 games</h2>
+  <p class="lede" id="last10-line"></p>
+  <div class="wrap">
+    <table id="last10-sheet">
+      <thead>
+        <tr>
+          <th>Hitter</th>
+          <th>Contact</th>
+          <th>In-zone whiff</th>
+          <th>Chase</th>
+          <th>Overall Execution<sup>2</sup></th>
+          <th>RISP knock-in</th>
+          <th>Move-over</th>
+          <th>QAB</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -59,6 +78,31 @@
     <p id="footnote2"></p>
   </section>
 </main>
+</div>
+<section class="print-sheet" id="print-sheet">
+  <img class="logo" src="site/assets/minnesota-twins.svg" alt="Minnesota Twins">
+  <h1>Hitter sheet</h1>
+  <p id="print-month"></p>
+  <p id="print-last10"></p>
+  <div class="wrap">
+    <table id="print-table">
+      <thead>
+        <tr>
+          <th>Hitter</th>
+          <th>Contact</th>
+          <th>In-zone whiff</th>
+          <th>Chase</th>
+          <th>Overall Execution</th>
+          <th>RISP knock-in</th>
+          <th>Move-over</th>
+          <th>QAB</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <p class="color-key">White = at league average. Green = better than average. Red = worse than average. Chase and in-zone miss are better when lower.</p>
+</section>
 <script src="js/sheet.js"></script>
 </body>
 </html>
