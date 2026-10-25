@@ -1168,7 +1168,7 @@ def write_workbook(payload: dict) -> Path:
         "In-zone swings",
         "Chase rate",
         "Out-of-zone pitches",
-        "Execution composite",
+        "Overall Execution",
         "RISP knock-in",
         "RISP PA",
         "Move-over",
@@ -1411,7 +1411,7 @@ def write_workbook(payload: dict) -> Path:
         ("Move-over", "See footnote 2 for the exact success rule.", "Eligible PA where the runner who started on second ends safe at third or home", "PA that begin with a runner on second, third empty, and 0 outs", "Statcast base-out state; MLB Stats API runner movement", "Higher"),
         ("QAB rate", "Plate appearances that last more than 5 pitches, meaning 6 or more Statcast pitch rows in the plate appearance.", "PA with pitch count ≥ 6", "Plate appearances", "Statcast pitch rows", "Higher"),
         ("Plate appearance", "A Statcast at-bat whose final pitch event is a completed batter result (hit, out, walk, HBP, sacrifice, error, catcher's interference, and the double-play and triple-play forms of those). Baserunning-only events such as stolen bases, wild pitches, and pickoffs are not plate appearances.", "—", "—", "Statcast events", "—"),
-        ("Execution composite", "100 × ((RISP / lg RISP) + (move-over / lg move-over) + (QAB / lg QAB)) / 3. Equal weights. 100 = league average. Blank if any input rate is undefined.", "—", "—", "The three rates and the league rates on the League averages sheet", "Higher"),
+        ("Overall Execution", "100 × ((RISP / lg RISP) + (move-over / lg move-over) + (QAB / lg QAB)) / 3. Equal weights. 100 = league average. Blank if any input rate is undefined.", "—", "—", "The three rates and the league rates on the League averages sheet", "Higher"),
         ("League set", "september = September 1–30, 2026 MLB pooled rates. season = all 2026 regular-season games on the schedule through September 30. Last-10 rows use the season set because each hitter's 10 games cover different dates.", "—", "—", "Computed in this workbook", "—"),
         ("Small sample", "Contact quality: under 8 tracked batted balls. Whiff: under 10 in-zone swings. Chase: under 10 out-of-zone pitches. RISP, move-over, QAB, and execution: under 10 opportunities (for execution, any of the three denominators under 10, or under 10 PA). The number is shown and the cell is not colored.", "—", "—", "—", "—"),
         ("White band", "Within 10% of the comparison league rate, inclusive: 0.90 ≤ rate/league ≤ 1.10. For the composite, 90 through 110.", "—", "—", "—", "—"),
@@ -1691,7 +1691,7 @@ export default function TwinsHitterTracking() {{
         </Row>
         <Text size="small" tone="secondary">
           Contact quality is either Statcast barrel% or damage rate (EV ≥ 95 mph and LA ≥ 10°),
-          and the same choice is used on both rows. Execution is the headline; the three rates beside it are the equal-weight inputs.
+          and the same choice is used on both rows. Overall Execution is the headline; the three rates beside it are the equal-weight inputs.
           Neutral cells are the white band (within 10% of the comparison league rate). Green is better. Red is worse.
           {{DATA.colorNote}}
         </Text>
@@ -1703,7 +1703,7 @@ export default function TwinsHitterTracking() {{
             "Contact quality",
             "In-zone whiff",
             "Chase",
-            <>Execution<sup>2</sup></>,
+            <>Overall Execution<sup>2</sup></>,
             "RISP knock-in",
             "Move-over",
             "QAB",
@@ -1746,7 +1746,7 @@ export default function TwinsHitterTracking() {{
           <Text size="small">{{DATA.footnote1}}</Text>
         </Stack>
         <Stack gap={{6}}>
-          <H3>Footnote 2 · Execution</H3>
+          <H3>Footnote 2 · Overall Execution</H3>
           <Text size="small">{{DATA.footnote2}}</Text>
         </Stack>
       </Grid>
@@ -1900,7 +1900,7 @@ def main() -> None:
         + _player_blurb(archetypes, BUXTON_ID, "Byron Buxton")
     )
     footnote2 = (
-        "Execution uses three equally weighted inputs. Each rate is divided by the MLB pooled league "
+        "Overall Execution uses three equally weighted inputs. Each rate is divided by the MLB pooled league "
         "rate for the same definition, the three ratios are averaged, and the result is multiplied by 100. "
         "Composite = 100 × ((RISP knock-in / league RISP knock-in) + (move-over / league move-over) + "
         "(QAB / league QAB)) / 3. A composite of 100 is league average. The raw rates are not averaged "
@@ -1933,7 +1933,7 @@ def main() -> None:
         f"(ratio 0.90 to 1.10). For the composite, that is 90 to 110. "
         f"Small sample: under {SMALL_BB} tracked batted balls for contact quality; "
         f"under {SMALL_N} in-zone swings, out-of-zone pitches, or plate-appearance opportunities "
-        "for the other columns. Execution is a small sample when PA, RISP PA, or move-over PA is under "
+        "for the other columns. Overall Execution is a small sample when PA, RISP PA, or move-over PA is under "
         f"{SMALL_N}. Santurce hitter cards color a continuous blue-to-red magnitude scale "
         "(rateHeatStyle in pregame.html). This sheet uses the requested direction instead: "
         "white at the league band, green when the rate is better, red when it is worse. "

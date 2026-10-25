@@ -1,11 +1,11 @@
 const statCols = [
-  ["contact_text", "contact_tone", "Contact"],
-  ["whiff_text", "whiff_tone", "In-zone whiff"],
-  ["chase_text", "chase_tone", "Chase"],
-  ["risp_text", "risp_tone", "RISP knock-in"],
-  ["move_text", "move_tone", "Move-over"],
-  ["qab_text", "qab_tone", "QAB"],
-  ["execution_text", "execution_tone", "Execution"],
+  ["contact_text", "contact_tone"],
+  ["whiff_text", "whiff_tone"],
+  ["chase_text", "chase_tone"],
+  ["execution_text", "execution_tone"],
+  ["risp_text", "risp_tone"],
+  ["move_text", "move_tone"],
+  ["qab_text", "qab_tone"],
 ];
 
 function cell(text, tone) {
@@ -68,15 +68,15 @@ function renderTable(view) {
     const metric = row.contact_metric === "Damage" ? "damage rate" : row.contact_metric === "Barrel" ? "barrel rate" : "";
     name.innerHTML = `<strong>${row.name}</strong><span>${row.pos} · ${arch}${metric ? ` · ${metric}` : ""}</span>`;
     tr.appendChild(name);
+    for (const [textKey, toneKey] of statCols) {
+      tr.appendChild(cell(row[textKey], row[toneKey]));
+    }
     const pa = document.createElement("td");
     pa.textContent = row.no_pa ? "No PA" : String(row.pa);
     tr.appendChild(pa);
     const games = document.createElement("td");
     games.textContent = row.no_pa ? "" : String(row.games);
     tr.appendChild(games);
-    for (const [textKey, toneKey] of statCols) {
-      tr.appendChild(cell(row[textKey], row[toneKey]));
-    }
     body.appendChild(tr);
   }
 }

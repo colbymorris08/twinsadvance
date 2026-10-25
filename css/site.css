@@ -131,6 +131,7 @@ button.export {
     border-bottom: 2px solid var(--navy);
     padding: 0 0 10px;
   }
+  .logo { height: 42px; }
   .brand strong, .brand span { color: var(--navy); }
   .tab, .controls, .groups, .status { display: none !important; }
   .print-head { display: block; color: var(--navy); font-size: 16px; font-weight: 700; }
