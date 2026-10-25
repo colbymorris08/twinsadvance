@@ -123,7 +123,11 @@ function onChart(row) {
 }
 
 function chartHitters(view) {
-  return view.hitters.filter(onChart);
+  return (view.hitters || []).filter(onChart);
+}
+
+function monthHasPa(view) {
+  return chartHitters(view).some((row) => !row.no_pa);
 }
 
 function renderIlNote() {
@@ -182,13 +186,27 @@ async function main() {
   renderIlNote();
   renderGroups(manifest.archetypes || []);
 
+  let initialFile = MONTHS[MONTHS.length - 1][4];
+  for (let i = MONTHS.length - 1; i >= 0; i -= 1) {
+    const file = MONTHS[i][4];
+    try {
+      const probe = await loadView(file);
+      if (monthHasPa(probe)) {
+        initialFile = file;
+        break;
+      }
+    } catch (err) {
+      /* try the previous month */
+    }
+  }
+
   const select = document.getElementById("month");
   for (const [id, label, , , file] of MONTHS) {
     const opt = document.createElement("option");
     opt.value = file;
     opt.textContent = label;
     opt.dataset.id = id;
-    opt.selected = id === "october";
+    opt.selected = file === initialFile;
     select.appendChild(opt);
   }
 
@@ -198,8 +216,21 @@ async function main() {
 
   async function showMonth() {
     status.textContent = "Loading…";
-    monthView = await loadView(select.value);
     const meta = MONTHS.find((row) => row[4] === select.value);
+    let loadError = "";
+    try {
+      monthView = await loadView(select.value);
+    } catch (err) {
+      loadError = err.message;
+      monthView = {
+        label: meta ? meta[1] : "Month",
+        start: meta ? meta[2] : "",
+        end: meta ? meta[3] : "",
+        comparison: "",
+        league: {},
+        hitters: [],
+      };
+    }
     if (meta) {
       monthView.label = meta[1];
       monthView.start = monthView.start || meta[2];
@@ -209,8 +240,15 @@ async function main() {
     renderPairs(document.querySelector("#sheet tbody"), monthView, lastView, true);
     document.getElementById("month-line").textContent = monthLine(monthView);
     renderPrint(monthView, lastView);
-    const n = chartHitters(monthView).length;
-    status.textContent = `${monthView.label}: ${n} hitters, month row above last 10`;
+    const listed = chartHitters(monthView).length;
+    const withPa = chartHitters(monthView).filter((row) => !row.no_pa).length;
+    if (loadError) {
+      status.textContent = `${loadError}. Showing last 10 games.`;
+    } else if (withPa) {
+      status.textContent = `${monthView.label}: ${listed} hitters, month row above last 10`;
+    } else {
+      status.textContent = `${monthView.label}: no plate appearances, showing last 10 games`;
+    }
   }
 
   document.getElementById("export-pdf").addEventListener("click", () => {

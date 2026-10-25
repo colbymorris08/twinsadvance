@@ -32,8 +32,6 @@
     <button type="button" class="export" id="export-pdf">Export PDF</button>
     <p class="status" id="status"></p>
   </div>
-  <p class="note" id="roster"></p>
-  <div class="groups" id="groups"></div>
   <p class="league" id="league"></p>
   <h2 class="view-title" id="month-line"></h2>
   <p class="lede" id="last10"></p>
@@ -54,12 +52,14 @@
       <tbody></tbody>
     </table>
   </div>
+  <p class="il-note" id="il-note" hidden></p>
+  <p class="note" id="roster"></p>
+  <div class="groups" id="groups"></div>
   <section class="footnotes">
     <p id="color"></p>
     <p id="footnote1"></p>
     <p id="footnote2"></p>
   </section>
-  <p class="il-note" id="il-note" hidden></p>
 </main>
 </div>
 <section class="print-sheet" id="print-sheet">
@@ -71,7 +71,13 @@
     <table id="print-table">
       <colgroup>
         <col class="col-name">
-        <col span="7">
+        <col class="col-contact">
+        <col class="col-whiff">
+        <col class="col-chase">
+        <col class="col-exec">
+        <col class="col-risp">
+        <col class="col-move">
+        <col class="col-qab">
       </colgroup>
       <thead>
         <tr>

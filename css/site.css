@@ -169,28 +169,47 @@ td.blank { background: #fff; color: #9ca3af; }
     min-width: 0;
     width: 100%;
     table-layout: fixed;
+    border-collapse: collapse;
   }
-  .print-sheet col.col-name { width: 36%; }
+  .print-sheet col.col-name { width: 35%; }
+  .print-sheet col.col-contact { width: 8%; }
+  .print-sheet col.col-whiff { width: 11%; }
+  .print-sheet col.col-chase { width: 7.5%; }
+  .print-sheet col.col-exec { width: 13.5%; }
+  .print-sheet col.col-risp { width: 11%; }
+  .print-sheet col.col-move { width: 8%; }
+  .print-sheet col.col-qab { width: 6%; }
   .print-sheet th {
     position: static;
     font-size: 7.5px;
     line-height: 1.1;
-    padding: 2px 2px;
+    font-weight: 600;
+    padding: 3px 2px;
     border-bottom-width: 2px;
-    white-space: normal;
-    vertical-align: bottom;
+    white-space: nowrap;
+    vertical-align: middle;
   }
   .print-sheet td {
-    font-size: 8.5px;
+    font-size: 9px;
     line-height: 1.05;
-    padding: 1px 3px;
+    padding: 2px 2px;
+    vertical-align: middle;
   }
-  .print-sheet td.name { min-width: 0; }
+  .print-sheet td.name { min-width: 0; text-align: left; }
+  .print-sheet td.name strong {
+    display: block;
+    font-size: 9px;
+    line-height: 1.05;
+    font-weight: 600;
+    white-space: nowrap;
+  }
   .print-sheet td.name span {
+    display: block;
     font-size: 7px;
     line-height: 1.05;
     white-space: nowrap;
   }
   .print-sheet td.stat { white-space: nowrap; }
+  .print-sheet tbody tr:nth-child(2n+3) td { border-top-color: #9aa8bc; }
   .print-sheet tr { break-inside: avoid; page-break-inside: avoid; }
 }
