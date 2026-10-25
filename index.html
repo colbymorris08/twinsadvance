@@ -1,308 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Twins Advance · Hitter sheet</title>
-<style>
-  :root {
-    --navy: #122C6F;
-    --ink: #142033;
-    --muted: #5c6778;
-    --line: #d5dbe3;
-    --good-bg: #d9f2e3;
-    --good-ink: #145c32;
-    --bad-bg: #f8d4d4;
-    --bad-ink: #8d1d1d;
-    --small-bg: #fff6df;
-    --small-ink: #6a5210;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: "Segoe UI", Helvetica, Arial, sans-serif;
-    color: var(--ink);
-    background: #eef1f6;
-  }
-  header.top {
-    background: var(--navy);
-    color: #fff;
-    padding: 22px 20px 18px;
-  }
-  header.top h1 { margin: 0 0 6px; font-size: 26px; font-weight: 750; }
-  header.top p { margin: 0; max-width: 920px; color: #d7e0f5; font-size: 14px; line-height: 1.45; }
-  .toolbar {
-    display: flex;
-    gap: 16px;
-    align-items: end;
-    flex-wrap: wrap;
-    padding: 14px 20px;
-    background: #fff;
-    border-bottom: 1px solid var(--line);
-    position: sticky;
-    top: 0;
-    z-index: 2;
-  }
-  label[for="month"] {
-    display: block;
-    font-size: 11px;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    color: var(--muted);
-    font-weight: 700;
-    margin-bottom: 4px;
-  }
-  select#month {
-    font-size: 16px;
-    padding: 8px 12px;
-    border: 1px solid #b7c0cc;
-    border-radius: 8px;
-    background: #fff;
-    min-width: 220px;
-  }
-  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: #243044; padding-bottom: 2px; }
-  .sw { display: inline-block; width: 12px; height: 12px; border: 1px solid #c5c9d0; vertical-align: -1px; margin-right: 4px; }
-  .sw.g { background: var(--good-bg); }
-  .sw.w { background: #fff; }
-  .sw.r { background: var(--bad-bg); }
-  .sw.s { background: var(--small-bg); }
-  .wrap { padding: 16px 20px 40px; max-width: 1280px; margin: 0 auto; }
-  .lgline {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
-    margin-bottom: 12px;
-    font-size: 12px;
-  }
-  .lgline div { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
-  .lgline b { display: block; font-size: 15px; margin-top: 2px; }
-  .sheet { overflow-x: auto; background: #fff; border: 1px solid var(--line); border-radius: 10px; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th {
-    background: #eceff3;
-    font-size: 11px;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    padding: 8px 6px;
-    border-bottom: 1px solid #c5c9d0;
-    text-align: center;
-    position: sticky;
-    top: 0;
-  }
-  th.left, td.name, td.sample { text-align: left; }
-  td { border: 1px solid #e1e4ea; padding: 6px; text-align: center; vertical-align: middle; background: #fff; }
-  td.name { min-width: 168px; padding-left: 10px; background: #f7f8fa; }
-  td b { display: block; font-size: 14px; font-variant-numeric: tabular-nums; }
-  .n { display: block; font-size: 10px; font-weight: 650; margin-top: 1px; color: #555; }
-  .who { font-weight: 800; font-size: 15px; }
-  .arch { font-weight: 700; font-size: 12px; margin-top: 2px; }
-  .pos { color: var(--muted); font-size: 11px; margin-top: 2px; }
-  td.good { background: var(--good-bg); color: var(--good-ink); }
-  td.bad { background: var(--bad-bg); color: var(--bad-ink); }
-  td.small { background: var(--small-bg); color: var(--small-ink); }
-  td.na { background: #f4f5f7; color: #888; }
-  td.good .n, td.bad .n, td.small .n { color: inherit; opacity: .8; }
-  section {
-    margin-top: 18px;
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 16px 18px;
-  }
-  section h2 { margin: 0 0 8px; font-size: 16px; }
-  section p { font-size: 13px; line-height: 1.5; }
-  .status { padding: 24px; }
-  @media (max-width: 800px) {
-    .lgline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  }
-</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Twins Advance — Hitter Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
 </head>
 <body>
-<header class="top">
-  <h1>Twins Advance hitter sheet</h1>
-  <p id="subtitle">Minnesota Twins position players. Pick a month to open that sheet. Green is better than the league band, red is worse, white is near average. A blank cell is no plate appearances, not a zero.</p>
-</header>
-<div class="toolbar">
-  <div>
-    <label for="month">Month</label>
-    <select id="month" aria-label="Month selector"></select>
-  </div>
-  <div class="legend">
-    <span><i class="sw g"></i>Better than league</span>
-    <span><i class="sw w"></i>Near league</span>
-    <span><i class="sw r"></i>Worse than league</span>
-    <span><i class="sw s"></i>Small sample</span>
-  </div>
-</div>
-<div class="wrap">
-  <div id="status" class="status">Loading the hitter sheet…</div>
-  <div id="app" hidden>
-    <div class="lgline" id="league"></div>
-    <div class="sheet">
-      <table>
-        <thead>
-          <tr>
-            <th class="left">Hitter</th>
-            <th class="left">Sample</th>
-            <th>Power</th>
-            <th>In-zone miss</th>
-            <th>Chase</th>
-            <th>RISP execution</th>
-            <th>Move runner</th>
-            <th>QAB%</th>
-            <th>Execution</th>
-          </tr>
-        </thead>
-        <tbody id="body"></tbody>
-      </table>
+<header class="topbar">
+  <div class="brand">
+    <img class="logo" src="site/assets/minnesota-twins.svg" alt="Minnesota Twins">
+    <div class="brand-text">
+      <strong>Twins Advance</strong>
+      <span>Hitter tracking · 2026</span>
     </div>
-    <section>
-      <h2>Footnotes</h2>
-      <p id="fn1"></p>
-      <p id="fn2"></p>
-      <p id="blank"></p>
-      <p id="roster"></p>
-    </section>
   </div>
-</div>
-<script>
-const MONTH_ORDER = ["april", "may", "june", "july", "august", "september", "october", "last10"];
-const MONTH_LABEL = {
-  april: "April 2026",
-  may: "May 2026",
-  june: "June 2026",
-  july: "July 2026",
-  august: "August 2026",
-  september: "September 2026",
-  october: "October 2026",
-  last10: "Last 10 games"
-};
-
-function pct(value) {
-  if (value == null || Number.isNaN(value)) return "—";
-  return (value * 100).toFixed(1) + "%";
-}
-
-function cell(text, tone, n, extra) {
-  if (tone === "blank" || text == null || text === "") {
-    return '<td class="na">—</td>';
-  }
-  const cls = tone === "green" ? "good" : tone === "red" ? "bad" : tone === "small" ? "small" : "avg";
-  const denom = n == null ? "" : '<span class="n">n=' + n + (extra ? " · " + extra : "") + "</span>";
-  return '<td class="' + cls + '"><b>' + text + "</b>" + denom + "</td>";
-}
-
-function esc(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-  }[ch]));
-}
-
-let sheet = null;
-
-function windowsIn(data) {
-  const seen = [];
-  for (const row of data.rows) {
-    if (!seen.includes(row.window_key)) seen.push(row.window_key);
-  }
-  seen.sort((a, b) => {
-    const ia = MONTH_ORDER.indexOf(a);
-    const ib = MONTH_ORDER.indexOf(b);
-    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
-  });
-  return seen;
-}
-
-function fillMonths() {
-  const select = document.getElementById("month");
-  const keys = windowsIn(sheet);
-  select.innerHTML = keys.map((key) => {
-    const label = MONTH_LABEL[key] || key;
-    return '<option value="' + esc(key) + '">' + esc(label) + "</option>";
-  }).join("");
-  const preferred = keys.includes("september") ? "september" : keys[0];
-  select.value = preferred;
-}
-
-function leagueFor(key) {
-  const leagueKey = key === "last10" ? "season" : key;
-  return (sheet.league && sheet.league[leagueKey]) || sheet.league.season;
-}
-
-function renderLeague(key) {
-  const league = leagueFor(key);
-  const items = [
-    ["Barrel", pct(league.barrel)],
-    ["Damage", pct(league.damage)],
-    ["In-zone miss", pct(league.whiff)],
-    ["Chase", pct(league.chase)],
-    ["RISP execution", pct(league.risp)],
-    ["Move runner", pct(league.move)],
-    ["QAB", pct(league.qab)],
-    ["Execution", "100"]
-  ];
-  document.getElementById("league").innerHTML = items.map(([name, value]) =>
-    "<div>" + esc(name) + "<b>" + esc(value) + "</b></div>"
-  ).join("");
-}
-
-function renderRows(key) {
-  const rows = sheet.rows
-    .filter((row) => row.window_key === key)
-    .slice()
-    .sort((a, b) => a.name.localeCompare(b.name));
-  document.getElementById("body").innerHTML = rows.map((row) => {
-    const mark = row.archetype_mark ? "<sup>" + esc(row.archetype_mark) + "</sup>" : "";
-    const arch = row.archetype ? esc(row.archetype) + mark : "unclassified";
-    const dates = (row.date_start && row.date_end) ? row.date_start.slice(5) + "–" + row.date_end.slice(5) : "";
-    const sample = esc(row.window) + '<span class="n">' + row.games + " games"
-      + (dates ? " · " + esc(dates) : "")
-      + " · " + row.pa + " PA</span>";
-    return "<tr>"
-      + '<td class="name"><span class="who">' + esc(row.name) + "</span>"
-      + '<div class="arch">(' + arch + ")</div>"
-      + '<div class="pos">' + esc(row.pos) + "</div></td>"
-      + '<td class="sample">' + sample + "</td>"
-      + cell(row.contact_text, row.contact_tone, row.contact_n, row.contact_metric)
-      + cell(row.whiff_text, row.whiff_tone, row.whiff_n)
-      + cell(row.chase_text, row.chase_tone, row.chase_n)
-      + cell(row.risp_text, row.risp_tone, row.risp_n)
-      + cell(row.move_text, row.move_tone, row.move_n)
-      + cell(row.qab_text, row.qab_tone, row.qab_n)
-      + cell(row.execution_text, row.execution_tone, row.pa)
-      + "</tr>";
-  }).join("");
-}
-
-function render() {
-  const key = document.getElementById("month").value;
-  renderLeague(key);
-  renderRows(key);
-}
-
-async function start() {
-  const status = document.getElementById("status");
-  try {
-    const response = await fetch("data/tracking.json");
-    if (!response.ok) throw new Error("HTTP " + response.status);
-    sheet = await response.json();
-    if (!sheet.rows || !sheet.rows.length) throw new Error("Hitter sheet has no rows");
-    document.getElementById("subtitle").textContent = sheet.subtitle || document.getElementById("subtitle").textContent;
-    document.getElementById("fn1").innerHTML = "<b>1.</b> " + esc(sheet.footnote1);
-    document.getElementById("fn2").innerHTML = "<b>2.</b> " + esc(sheet.footnote2);
-    document.getElementById("blank").textContent = sheet.blank_note || "";
-    document.getElementById("roster").textContent = sheet.roster_note || "";
-    fillMonths();
-    document.getElementById("month").addEventListener("change", render);
-    render();
-    status.hidden = true;
-    document.getElementById("app").hidden = false;
-  } catch (error) {
-    status.textContent = "The hitter sheet did not load. " + error.message;
-  }
-}
-
-start();
-</script>
+  <a class="tab" href="index.html">Hitter Sheet</a>
+</header>
+<main class="page">
+  <h1>Hitter sheet</h1>
+  <p class="print-head" id="print-head"></p>
+  <p class="lede" id="subtitle"></p>
+  <div class="controls">
+    <label>Month
+      <select id="month" aria-label="Month"></select>
+    </label>
+    <button type="button" class="export" id="export-pdf">Export PDF</button>
+    <p class="status" id="status"></p>
+  </div>
+  <p class="note" id="roster"></p>
+  <div class="groups" id="groups"></div>
+  <p class="league" id="league"></p>
+  <div class="wrap">
+    <table id="sheet">
+      <thead>
+        <tr>
+          <th>Hitter</th>
+          <th>PA</th>
+          <th>Games</th>
+          <th>Contact</th>
+          <th>In-zone whiff</th>
+          <th>Chase</th>
+          <th>RISP knock-in</th>
+          <th>Move-over</th>
+          <th>QAB</th>
+          <th>Execution<sup>2</sup></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <section class="footnotes">
+    <p id="color"></p>
+    <p id="footnote1"></p>
+    <p id="footnote2"></p>
+  </section>
+</main>
+<script src="js/sheet.js"></script>
 </body>
 </html>
