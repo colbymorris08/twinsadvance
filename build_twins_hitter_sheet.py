@@ -1411,10 +1411,10 @@ def write_workbook(payload: dict) -> Path:
         ("Move-over", "See footnote 2 for the exact success rule.", "Eligible PA where the runner who started on second ends safe at third or home", "PA that begin with a runner on second, third empty, and 0 outs", "Statcast base-out state; MLB Stats API runner movement", "Higher"),
         ("QAB rate", "Plate appearances that last more than 5 pitches, meaning 6 or more Statcast pitch rows in the plate appearance.", "PA with pitch count ≥ 6", "Plate appearances", "Statcast pitch rows", "Higher"),
         ("Plate appearance", "A Statcast at-bat whose final pitch event is a completed batter result (hit, out, walk, HBP, sacrifice, error, catcher's interference, and the double-play and triple-play forms of those). Baserunning-only events such as stolen bases, wild pitches, and pickoffs are not plate appearances.", "—", "—", "Statcast events", "—"),
-        ("Overall Execution", "100 × ((RISP / lg RISP) + (move-over / lg move-over) + (QAB / lg QAB)) / 3. Equal weights. 100 = league average. Blank if any input rate is undefined.", "—", "—", "The three rates and the league rates on the League averages sheet", "Higher"),
+        ("Overall Execution", "(RISP knock-in + move-over + QAB) / 3. Equal weights. Compared with the same average of the three league rates. White within 1.5 percentage points. If an input is missing, average the rates that exist. Blank if none exist.", "—", "—", "The three rates and the league rates on the League averages sheet", "Higher"),
         ("League set", "september = September 1–30, 2026 MLB pooled rates. season = all 2026 regular-season games on the schedule through September 30. Last-10 rows use the season set because each hitter's 10 games cover different dates.", "—", "—", "Computed in this workbook", "—"),
-        ("Small sample", "Contact quality: under 8 tracked batted balls. Whiff: under 10 in-zone swings. Chase: under 10 out-of-zone pitches. RISP, move-over, QAB, and execution: under 10 opportunities (for execution, any of the three denominators under 10, or under 10 PA). The number is shown and the cell is not colored.", "—", "—", "—", "—"),
-        ("White band", "Within 10% of the comparison league rate, inclusive: 0.90 ≤ rate/league ≤ 1.10. For the composite, 90 through 110.", "—", "—", "—", "—"),
+        ("Small sample", "Contact quality: under 8 tracked batted balls. Whiff: under 10 in-zone swings. Chase: under 10 out-of-zone pitches. RISP, move-over, and QAB: under 10 opportunities. The number is shown and the cell is not colored. Overall Execution is still colored from the league composite.", "—", "—", "—", "—"),
+        ("White band", "Within 10% of the comparison league rate, inclusive: 0.90 ≤ rate/league ≤ 1.10. Overall Execution is white within 1.5 percentage points of the league composite.", "—", "—", "—", "—"),
     ]
     for i, rec in enumerate(dictionary):
         for c, v in enumerate(rec, 1):
@@ -1900,11 +1900,10 @@ def main() -> None:
         + _player_blurb(archetypes, BUXTON_ID, "Byron Buxton")
     )
     footnote2 = (
-        "Overall Execution uses three equally weighted inputs. Each rate is divided by the MLB pooled league "
-        "rate for the same definition, the three ratios are averaged, and the result is multiplied by 100. "
-        "Composite = 100 × ((RISP knock-in / league RISP knock-in) + (move-over / league move-over) + "
-        "(QAB / league QAB)) / 3. A composite of 100 is league average. The raw rates are not averaged "
-        "together, because they sit on different scales. "
+        "Overall Execution is an equal-weight average of RISP knock-in, move-over, and QAB. "
+        "Composite = (RISP knock-in + move-over + QAB) / 3, compared with the same average of the three league rates. "
+        "Higher is better. White is within 1.5 percentage points of that league composite. "
+        "If one input is missing, the cell averages the rates that exist. If none exist, the cell is blank. "
         "RISP knock-in is the share of plate appearances that begin with a runner on second and/or third "
         "in which the batter is credited with at least one RBI (MLB Stats API result.rbi on that plate appearance). "
         "Move-over denominator: plate appearances that begin with a runner on second, nobody on third, and 0 outs. "
@@ -1915,7 +1914,7 @@ def main() -> None:
         "hit-by-pitch, wild pitch, passed ball, balk, or stolen base during the plate appearance all count. "
         "A strikeout on which that runner does not end safe at third or home is a failure. "
         "QAB is the share of plate appearances with more than 5 pitches (6 or more Statcast pitches). "
-        "Each month is indexed to that month’s MLB rates. Last-10 rows use full-season 2026 MLB rates, "
+        "Each month is compared with that month’s MLB rates. Last-10 rows use full-season 2026 MLB rates, "
         "because those games are not one shared month. "
         f"2026 MLB RISP knock-in rate was {pct(s['risp'])} (n={s['risp_n']:,} PA). "
         f"2026 MLB 0-out, second-to-third move-over rate was {pct(s['move'])} (n={s['move_n']:,} PA). "
@@ -1923,18 +1922,18 @@ def main() -> None:
         f"September 2026 MLB RISP knock-in rate was {pct(m['risp'])} (n={m['risp_n']:,}). "
         f"September move-over rate was {pct(m['move'])} (n={m['move_n']:,}). "
         f"September QAB rate was {pct(m['qab'])} (n={m['pa']:,}). "
-        f"Also indexed the same way: 2026 barrel% {pct(s['barrel'])}, damage rate {pct(s['damage'])}, "
+        f"League rates for the other columns: 2026 barrel% {pct(s['barrel'])}, damage rate {pct(s['damage'])}, "
         f"in-zone whiff {pct(s['whiff'])}, chase {pct(s['chase'])}. "
         f"September barrel% {pct(m['barrel'])}, damage rate {pct(m['damage'])}, "
         f"in-zone whiff {pct(m['whiff'])}, chase {pct(m['chase'])}."
     )
     color_note = (
         f"White band is within {BAND:.0%} of the comparison league rate, inclusive "
-        f"(ratio 0.90 to 1.10). For the composite, that is 90 to 110. "
+        f"(ratio 0.90 to 1.10). Overall Execution is white within 1.5 percentage points of the league composite. "
+        "Overall Execution averages the RISP, move-over, and QAB rates that exist. "
         f"Small sample: under {SMALL_BB} tracked batted balls for contact quality; "
         f"under {SMALL_N} in-zone swings, out-of-zone pitches, or plate-appearance opportunities "
-        "for the other columns. Overall Execution is a small sample when PA, RISP PA, or move-over PA is under "
-        f"{SMALL_N}. Santurce hitter cards color a continuous blue-to-red magnitude scale "
+        "for the other columns. Santurce hitter cards color a continuous blue-to-red magnitude scale "
         "(rateHeatStyle in pregame.html). This sheet uses the requested direction instead: "
         "white at the league band, green when the rate is better, red when it is worse. "
         "Header navy #122C6F matches the Santurce licey navy. Cell green and red are light fills "
@@ -1949,7 +1948,7 @@ def main() -> None:
         f"{', '.join(roster_meta['removed_vs_prior_sheet']) or 'none'}. "
         f"Added versus that earlier sheet: {', '.join(roster_meta['added_vs_prior_sheet']) or 'none'}. "
         "Last-10 games can predate September when that is when the hitter last played. "
-        "A month with no plate appearances is a blank row."
+        "A hitter with no plate appearances in the selected month is left off that month."
     )
     coverage_note = (
         f"Schedule finals: {len(games):,} regular-season games, {dates[0]} through {dates[-1]}. "
@@ -1959,8 +1958,8 @@ def main() -> None:
         f"{pa_info['api_match_rate']:.1%}. Batter-id mismatches: {pa_info['batter_mismatch']:,}."
     )
     blank_note = (
-        "Cells are blank when the denominator is zero or, for the composite, when any of the three "
-        "input rates is undefined. A month with no plate appearances is a blank row, with no zero rates. "
+        "Cells are blank when the denominator is zero. Overall Execution is blank only when RISP knock-in, "
+        "move-over, and QAB are all missing. A hitter with no plate appearances in the selected month is left off that month, with no zero rates. "
         f"Archetype contact cells are blank when the hitter has fewer than {ARCHETYPE_MIN_BB} competitive batted balls. "
         "No rate was imputed from a nearby player, from a career norm, or from memory."
     )
@@ -1979,7 +1978,7 @@ def main() -> None:
             f"{len(pitchers)} pitchers excluded. "
             "April through September are regular-season games in that month. "
             "Last 10 is each hitter’s last 10 games with a plate appearance on or before September 30. "
-            "A month with no plate appearances is blank."
+            "A hitter with no plate appearances in the selected month is left off that month."
         ),
         "footnote1": footnote1,
         "footnote2": footnote2,

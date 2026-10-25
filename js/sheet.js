@@ -32,6 +32,40 @@ function pct(rate) {
   return `${(rate * 100).toFixed(1)}%`;
 }
 
+const EXEC_INPUTS = ["risp", "move", "qab"];
+const EXEC_BAND = 0.015;
+
+function finiteRate(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function mean(values) {
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function hitterExecution(row) {
+  const rates = EXEC_INPUTS.map((key) => row[key]).filter(finiteRate);
+  if (!rates.length) return null;
+  return mean(rates);
+}
+
+function leagueExecution(league) {
+  const rates = EXEC_INPUTS.map((key) => (league || {})[key]).filter(finiteRate);
+  if (rates.length !== EXEC_INPUTS.length) return null;
+  return mean(rates);
+}
+
+function executionDisplay(row, league) {
+  const value = hitterExecution(row);
+  if (value === null) return { text: "", tone: "blank" };
+  const baseline = leagueExecution(league);
+  if (baseline === null) return { text: pct(value), tone: "blank" };
+  const gap = value - baseline;
+  if (gap > EXEC_BAND + 1e-12) return { text: pct(value), tone: "green" };
+  if (gap < -(EXEC_BAND + 1e-12)) return { text: pct(value), tone: "red" };
+  return { text: pct(value), tone: "white" };
+}
+
 function num(value, digits = 1) {
   if (value === null || value === undefined) return "—";
   return Number(value).toFixed(digits);
@@ -96,21 +130,24 @@ function renderGroups(archetypes) {
   }
 }
 
-function appendRow(body, row, note, marks) {
+function hasPa(row) {
+  return !!row && !row.no_pa;
+}
+
+function appendRow(body, row, note, marks, league) {
   const tr = document.createElement("tr");
-  if (row.no_pa) tr.className = "noppa";
   const name = document.createElement("td");
   name.className = "name";
   const mark = marks && row.archetype_mark ? "<sup>1</sup>" : "";
   const arch = row.archetype ? `${row.archetype}${mark}` : "Unclassified";
   const metric = row.contact_metric === "Damage" ? "damage rate" : row.contact_metric === "Barrel" ? "barrel rate" : "";
-  let detail = note || "";
-  if (row.no_pa && !/No PA/.test(detail)) detail = detail ? `${detail} · No PA` : "No PA";
-  const sub = [row.pos, arch, metric, detail].filter(Boolean).join(" · ");
+  const sub = [row.pos, arch, metric, note || ""].filter(Boolean).join(" · ");
   name.innerHTML = `<strong>${row.name}</strong><span>${sub}</span>`;
   tr.appendChild(name);
+  const exec = executionDisplay(row, league);
   for (const [textKey, toneKey] of statCols) {
-    tr.appendChild(cell(row[textKey], row[toneKey]));
+    if (textKey === "execution_text") tr.appendChild(cell(exec.text, exec.tone));
+    else tr.appendChild(cell(row[textKey], row[toneKey]));
   }
   body.appendChild(tr);
 }
@@ -144,14 +181,16 @@ function renderPairs(body, monthView, lastView, marks) {
   const lastById = new Map(chartHitters(lastView).map((h) => [h.id, h]));
   const seen = new Set();
   const monthName = monthView.label.replace(/ 2026$/, "");
+  const monthLeague = monthView.league || {};
+  const lastLeague = lastView.league || {};
   for (const row of chartHitters(monthView)) {
     seen.add(row.id);
-    appendRow(body, row, monthName, marks);
+    if (hasPa(row)) appendRow(body, row, monthName, marks, monthLeague);
     const last = lastById.get(row.id);
-    if (last) appendRow(body, last, `Last 10 · ${hitterDates(last)}`, marks);
+    if (hasPa(last)) appendRow(body, last, `Last 10 · ${hitterDates(last)}`, marks, lastLeague);
   }
   for (const row of chartHitters(lastView)) {
-    if (!seen.has(row.id)) appendRow(body, row, `Last 10 · ${hitterDates(row)}`, marks);
+    if (!seen.has(row.id) && hasPa(row)) appendRow(body, row, `Last 10 · ${hitterDates(row)}`, marks, lastLeague);
   }
 }
 
@@ -240,12 +279,11 @@ async function main() {
     renderPairs(document.querySelector("#sheet tbody"), monthView, lastView, true);
     document.getElementById("month-line").textContent = monthLine(monthView);
     renderPrint(monthView, lastView);
-    const listed = chartHitters(monthView).length;
     const withPa = chartHitters(monthView).filter((row) => !row.no_pa).length;
     if (loadError) {
       status.textContent = `${loadError}. Showing last 10 games.`;
     } else if (withPa) {
-      status.textContent = `${monthView.label}: ${listed} hitters, month row above last 10`;
+      status.textContent = `${monthView.label}: ${withPa} hitters with month plate appearances, month row above last 10`;
     } else {
       status.textContent = `${monthView.label}: no plate appearances, showing last 10 games`;
     }
