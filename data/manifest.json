@@ -44,6 +44,8 @@
   "blank_note": "Cells are blank when the denominator is zero or, for the composite, when any of the three input rates is undefined. A month with no plate appearances is a blank row, with no zero rates. Archetype contact cells are blank when the hitter has fewer than 30 competitive batted balls. No rate was imputed from a nearby player, from a career norm, or from memory.",
   "subtitle": "Every Twins position player on the active roster at any point in September 2026: 22 hitters. 19 pitchers excluded. April through September are regular-season games in that month. Last 10 is each hitter\u2019s last 10 games with a plate appearance on or before September 30. A month with no plate appearances is blank.",
   "hitters_included": "Josh Bell (DH), Byron Buxton (CF), Victor Caratini (C), Kody Clemens (2B), Kaelen Culpepper (SS), Gabriel Gonzalez (RF), Tristan Gray (SS), Alex Jackson (C), Ryan Jeffers (C), Walker Jenkins (CF), Luke Keaschall (2B), Ryan Kreidler (SS), Trevor Larnach (LF), Brooks Lee (3B), Royce Lewis (1B), Austin Martin (RF), Hendry Mendez (OF), Alan Roden (RF), Emmanuel Rodriguez (CF), Ben Ross (SS), Aaron Sabato (1B), Matt Wallner (RF)",
+  "il_note": "IL, no stats in the last 30 days: Byron Buxton, Trevor Larnach.",
+  "il_omit_ids": [621439, 663616],
   "archetypes": [
     {
       "id": 605137,

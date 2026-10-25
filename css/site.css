@@ -108,6 +108,7 @@ td.blank { background: #fff; color: #9ca3af; }
 .groups li { margin-left: 16px; font-size: 13px; line-height: 1.4; }
 .footnotes { margin-top: 22px; display: grid; gap: 12px; }
 .footnotes p { margin: 0; color: #c5d0e0; font-size: 13px; line-height: 1.5; }
+.il-note { margin: 16px 0 0; color: var(--muted); font-size: 12px; line-height: 1.4; }
 .status { color: var(--gold); }
 .export {
   font: inherit;
@@ -139,6 +140,7 @@ td.blank { background: #fff; color: #9ca3af; }
   .print-sheet h1 { font-size: 22px; margin: 8px 0; color: #111; }
   .print-sheet p { margin: 0 0 4px; color: #111; font-size: 14px; }
   .print-sheet .color-key { margin-top: 12px; font-size: 11px; }
+  .print-sheet p.il-note { margin-top: 4px; font-size: 10px; color: #333; line-height: 1.3; }
   .print-sheet .wrap { border-color: var(--navy); }
   .print-sheet table { min-width: 0; width: 100%; }
   .print-sheet th { position: static; font-size: 11px; }

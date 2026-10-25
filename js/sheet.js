@@ -114,10 +114,30 @@ function appendRow(body, row, note, marks) {
   body.appendChild(tr);
 }
 
+let omitIds = new Set();
+let ilNoteText = "";
+
+function onChart(row) {
+  return !omitIds.has(row.id);
+}
+
+function chartHitters(view) {
+  return view.hitters.filter(onChart);
+}
+
+function renderIlNote() {
+  const text = ilNoteText;
+  for (const id of ["il-note", "print-il-note"]) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.hidden = !text;
+  }
+}
+
 function renderTable(view, selector, noteFor) {
   const body = document.querySelector(selector);
   body.innerHTML = "";
-  for (const row of view.hitters) {
+  for (const row of chartHitters(view)) {
     appendRow(body, row, noteFor ? noteFor(row) : "", true);
   }
 }
@@ -127,18 +147,19 @@ function renderPrint(monthView, lastView) {
   document.getElementById("print-last10").textContent = last10Line(lastView);
   const body = document.querySelector("#print-table tbody");
   body.innerHTML = "";
-  const lastById = new Map(lastView.hitters.map((h) => [h.id, h]));
+  const lastById = new Map(chartHitters(lastView).map((h) => [h.id, h]));
   const seen = new Set();
   const monthName = monthView.label.replace(/ 2026$/, "");
-  for (const row of monthView.hitters) {
+  for (const row of chartHitters(monthView)) {
     seen.add(row.id);
     appendRow(body, row, monthName, false);
     const last = lastById.get(row.id);
     if (last) appendRow(body, last, `Last 10 · ${hitterDates(last)}`, false);
   }
-  for (const row of lastView.hitters) {
+  for (const row of chartHitters(lastView)) {
     if (!seen.has(row.id)) appendRow(body, row, `Last 10 · ${hitterDates(row)}`, false);
   }
+  renderIlNote();
 }
 
 async function loadView(file) {
@@ -160,6 +181,9 @@ async function main() {
     ? footnote2
     : `Footnote 2. ${footnote2}`;
   document.getElementById("color").textContent = manifest.color_note || "";
+  omitIds = new Set(manifest.il_omit_ids || []);
+  ilNoteText = manifest.il_note || "";
+  renderIlNote();
   renderGroups(manifest.archetypes || []);
 
   const select = document.getElementById("month");
@@ -190,7 +214,7 @@ async function main() {
     renderTable(monthView, "#sheet tbody");
     document.getElementById("month-line").textContent = monthLine(monthView);
     renderPrint(monthView, lastView);
-    status.textContent = `${monthView.label}: ${monthView.hitters.length} hitters · Last 10 games: ${lastView.hitters.length} hitters`;
+    status.textContent = `${monthView.label}: ${chartHitters(monthView).length} hitters · Last 10 games: ${chartHitters(lastView).length} hitters`;
   }
 
   document.getElementById("export-pdf").addEventListener("click", () => {
