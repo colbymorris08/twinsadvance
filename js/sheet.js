@@ -54,8 +54,9 @@ function monthLine(view) {
 }
 
 function last10Line(view) {
-  const starts = view.hitters.map((h) => h.date_start).filter(Boolean).sort();
-  const ends = view.hitters.map((h) => h.date_end).filter(Boolean).sort();
+  const hitters = chartHitters(view);
+  const starts = hitters.map((h) => h.date_start).filter(Boolean).sort();
+  const ends = hitters.map((h) => h.date_end).filter(Boolean).sort();
   const range = span(starts[0], ends[ends.length - 1]);
   return range ? `Last 10 games, ${range}` : "Last 10 games";
 }
@@ -134,31 +135,26 @@ function renderIlNote() {
   }
 }
 
-function renderTable(view, selector, noteFor) {
-  const body = document.querySelector(selector);
-  body.innerHTML = "";
-  for (const row of chartHitters(view)) {
-    appendRow(body, row, noteFor ? noteFor(row) : "", true);
-  }
-}
-
-function renderPrint(monthView, lastView) {
-  document.getElementById("print-month").textContent = monthLine(monthView);
-  document.getElementById("print-last10").textContent = last10Line(lastView);
-  const body = document.querySelector("#print-table tbody");
+function renderPairs(body, monthView, lastView, marks) {
   body.innerHTML = "";
   const lastById = new Map(chartHitters(lastView).map((h) => [h.id, h]));
   const seen = new Set();
   const monthName = monthView.label.replace(/ 2026$/, "");
   for (const row of chartHitters(monthView)) {
     seen.add(row.id);
-    appendRow(body, row, monthName, false);
+    appendRow(body, row, monthName, marks);
     const last = lastById.get(row.id);
-    if (last) appendRow(body, last, `Last 10 · ${hitterDates(last)}`, false);
+    if (last) appendRow(body, last, `Last 10 · ${hitterDates(last)}`, marks);
   }
   for (const row of chartHitters(lastView)) {
-    if (!seen.has(row.id)) appendRow(body, row, `Last 10 · ${hitterDates(row)}`, false);
+    if (!seen.has(row.id)) appendRow(body, row, `Last 10 · ${hitterDates(row)}`, marks);
   }
+}
+
+function renderPrint(monthView, lastView) {
+  document.getElementById("print-month").textContent = monthLine(monthView);
+  document.getElementById("print-last10").textContent = last10Line(lastView);
+  renderPairs(document.querySelector("#print-table tbody"), monthView, lastView, false);
   renderIlNote();
 }
 
@@ -198,8 +194,7 @@ async function main() {
 
   let monthView = null;
   const lastView = await loadView("last10.json");
-  document.getElementById("last10-line").textContent = last10Line(lastView);
-  renderTable(lastView, "#last10-sheet tbody", (row) => hitterDates(row));
+  document.getElementById("last10").textContent = last10Line(lastView);
 
   async function showMonth() {
     status.textContent = "Loading…";
@@ -211,10 +206,11 @@ async function main() {
       monthView.end = monthView.end || meta[3];
     }
     renderLeague(monthView);
-    renderTable(monthView, "#sheet tbody");
+    renderPairs(document.querySelector("#sheet tbody"), monthView, lastView, true);
     document.getElementById("month-line").textContent = monthLine(monthView);
     renderPrint(monthView, lastView);
-    status.textContent = `${monthView.label}: ${chartHitters(monthView).length} hitters · Last 10 games: ${chartHitters(lastView).length} hitters`;
+    const n = chartHitters(monthView).length;
+    status.textContent = `${monthView.label}: ${n} hitters, month row above last 10`;
   }
 
   document.getElementById("export-pdf").addEventListener("click", () => {
