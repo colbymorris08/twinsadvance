@@ -51,7 +51,10 @@ EXTRACT_VERSION = 1
 LEE_ID = 686797
 KEASCHALL_ID = 807712
 BUXTON_ID = 621439
+LARNACH_ID = 663616
 EXAMPLE_IDS = {LEE_ID, KEASCHALL_ID, BUXTON_ID}
+IL_OMIT_IDS = [BUXTON_ID, LARNACH_ID]
+IL_NOTE = "IL, no stats in the last 30 days: Byron Buxton, Trevor Larnach."
 OVERRIDE_ARCHETYPE = {
     LEE_ID: "Damage",  # Brooks Lee, power hitter, damage example
     KEASCHALL_ID: "Barrel",  # Luke Keaschall, average-EV hitter, barrel example
@@ -827,6 +830,10 @@ def build_rows(hitters: list[dict], pitches: pd.DataFrame, pas: pd.DataFrame, le
         pid = h["id"]
         arch = archetypes[pid]
         metric = arch["archetype"]  # Barrel, Damage, or None
+        # Archetype stays withheld under 30 competitive batted balls, but the
+        # exit-velocity rule still picks the contact rate to show.
+        sample_limited = bool(arch.get("sample_limited"))
+        contact_metric = arch.get("rule") if sample_limited else metric
         p_player = pitches[pitches["batter"] == pid]
         a_player = pas[pas["batter"] == pid]
         games = (
@@ -863,10 +870,10 @@ def build_rows(hitters: list[dict], pitches: pd.DataFrame, pas: pd.DataFrame, le
             comp = composite(summary, league)
             contact_rate = None
             contact_n = summary["bb"]
-            if metric == "Barrel":
+            if contact_metric == "Barrel":
                 contact_rate = summary["barrel"]
                 contact_lg = league["barrel"]
-            elif metric == "Damage":
+            elif contact_metric == "Damage":
                 contact_rate = summary["damage"]
                 contact_lg = league["damage"]
             else:
@@ -886,7 +893,7 @@ def build_rows(hitters: list[dict], pitches: pd.DataFrame, pas: pd.DataFrame, le
             if comp is None:
                 comp_small = False
             small_bits = []
-            if metric and contact_rate is not None and contact_small:
+            if contact_rate is not None and (sample_limited or (contact_metric and contact_small)):
                 small_bits.append("contact")
             if summary["whiff"] is not None and whiff_small:
                 small_bits.append("in-zone whiff")
@@ -901,7 +908,7 @@ def build_rows(hitters: list[dict], pitches: pd.DataFrame, pas: pd.DataFrame, le
             if comp is not None and comp_small:
                 small_bits.append("execution")
             undefined = []
-            if metric is None:
+            if contact_metric is None:
                 undefined.append("contact (archetype not classified)")
             elif contact_rate is None:
                 undefined.append("contact (0 tracked batted balls)")
@@ -942,11 +949,17 @@ def build_rows(hitters: list[dict], pitches: pd.DataFrame, pas: pd.DataFrame, le
                     "date_start": None if no_pa else summary["date_start"],
                     "date_end": None if no_pa else summary["date_end"],
                     "league_key": league_key,
-                    "contact_metric": metric,
+                    "contact_metric": contact_metric,
                     "contact": None if no_pa else contact_rate,
                     "contact_n": None if no_pa else contact_n,
                     "contact_text": None if no_pa else pct_text(contact_rate),
-                    "contact_tone": "blank" if no_pa else tone_for(contact_rate, contact_lg, True, contact_small and contact_rate is not None),
+                    "contact_tone": (
+                        "blank"
+                        if no_pa or contact_rate is None
+                        else "small"
+                        if sample_limited
+                        else tone_for(contact_rate, contact_lg, True, contact_small)
+                    ),
                     "whiff": None if no_pa else summary["whiff"],
                     "whiff_n": None if no_pa else summary["whiff_n"],
                     "whiff_text": None if no_pa else pct_text(summary["whiff"]),
@@ -1026,10 +1039,11 @@ def classify(hitters, pitches, league_season) -> dict:
             barrel = _rate(int(m["barrel"].sum()), bb)
         rule = None
         reason = ""
-        if ev is None or ev_n < ARCHETYPE_MIN_BB or barrel is None or line is None:
+        sample_limited = False
+        if ev is None or barrel is None or line is None:
             reason = (
                 f"Fewer than {ARCHETYPE_MIN_BB} competitive batted balls (n={ev_n}), "
-                "so the contact cell stays blank."
+                "so no contact rate can be computed."
             )
         elif ev >= line:
             rule = "Damage"
@@ -1043,9 +1057,17 @@ def classify(hitters, pitches, league_season) -> dict:
                 f"Avg EV {ev:.1f} is below the high-EV line of {line:.1f} "
                 f"(league {league_ev:.1f}), so he is an average-EV hitter graded on barrel rate."
             )
-        final = rule
+        if rule is not None and ev_n < ARCHETYPE_MIN_BB:
+            sample_limited = True
+            rate_name = "damage rate" if rule == "Damage" else "barrel rate"
+            reason = (
+                f"{reason} Competitive contact is under {ARCHETYPE_MIN_BB} batted balls "
+                f"(n={ev_n}), so the archetype stays unclassified and the {rate_name} "
+                "is shown in italic gray."
+            )
+        final = None if sample_limited or rule is None else rule
         override = h["id"] in OVERRIDE_ARCHETYPE
-        if override:
+        if override and not sample_limited:
             final = OVERRIDE_ARCHETYPE[h["id"]]
         if h["id"] == LEE_ID and ev is not None:
             reason = (
@@ -1083,6 +1105,7 @@ def classify(hitters, pitches, league_season) -> dict:
             "residual": None,
             "rule": rule,
             "rule_reason": reason,
+            "sample_limited": sample_limited,
             "override": override,
             "archetype": final,
             "override_note": note,
@@ -1142,9 +1165,10 @@ def write_workbook(payload: dict) -> Path:
     ws["A3"] = (
         "Color: green is better than the comparison league rate, white is within 10% of that rate "
         "(inclusive), red is worse. Higher is better for contact quality, execution, RISP knock-in, "
-        "move-over, and QAB. Lower is better for in-zone whiff and chase. Gray italic is a small sample "
-        "and is not green or red (under 8 tracked batted balls, or under 10 swings / out-of-zone pitches / "
-        "plate appearances, whichever denominator the column uses). A blank cell could not be computed. "
+        "move-over, and QAB. Lower is better for in-zone whiff and chase. Italic gray = sample size too small, "
+        "and those cells are not green, red, or white (under 8 tracked batted balls, under 30 competitive "
+        "batted balls for contact quality, or under 10 swings / out-of-zone pitches / plate appearances, "
+        "whichever denominator the column uses). A blank cell could not be computed. "
         "Each month uses that month’s 2026 MLB rates. Last-10 rows use full-season 2026 MLB rates. "
         "See Notes for footnotes 1 and 2."
     )
@@ -1413,7 +1437,7 @@ def write_workbook(payload: dict) -> Path:
         ("Plate appearance", "A Statcast at-bat whose final pitch event is a completed batter result (hit, out, walk, HBP, sacrifice, error, catcher's interference, and the double-play and triple-play forms of those). Baserunning-only events such as stolen bases, wild pitches, and pickoffs are not plate appearances.", "—", "—", "Statcast events", "—"),
         ("Overall Execution", "(RISP knock-in + move-over + QAB) / 3. Equal weights. Compared with the same average of the three league rates. White within 1.5 percentage points. If an input is missing, average the rates that exist. Blank if none exist.", "—", "—", "The three rates and the league rates on the League averages sheet", "Higher"),
         ("League set", "september = September 1–30, 2026 MLB pooled rates. season = all 2026 regular-season games on the schedule through September 30. Last-10 rows use the season set because each hitter's 10 games cover different dates.", "—", "—", "Computed in this workbook", "—"),
-        ("Small sample", "Contact quality: under 8 tracked batted balls. Whiff: under 10 in-zone swings. Chase: under 10 out-of-zone pitches. RISP, move-over, and QAB: under 10 opportunities. The number is shown and the cell is not colored. Overall Execution is still colored from the league composite.", "—", "—", "—", "—"),
+        ("Small sample", "Italic gray = sample size too small. Contact quality: under 8 tracked batted balls, and also when the hitter has fewer than 30 competitive batted balls. In that second case the barrel or damage rate is still shown and is not colored green, red, or white. Whiff: under 10 in-zone swings. Chase: under 10 out-of-zone pitches. RISP, move-over, and QAB: under 10 opportunities. The number is shown and the cell is not colored. Overall Execution is still colored from the league composite.", "—", "—", "—", "—"),
         ("White band", "Within 10% of the comparison league rate, inclusive: 0.90 ≤ rate/league ≤ 1.10. Overall Execution is white within 1.5 percentage points of the league composite.", "—", "—", "—", "—"),
     ]
     for i, rec in enumerate(dictionary):
@@ -1885,8 +1909,9 @@ def main() -> None:
         "graded on damage rate. A hitter is Barrel when average exit velocity is below that line. "
         "That is the average-exit-velocity group, graded on barrel rate. "
         "The two groups do not have to be the same size. "
-        f"Hitters with fewer than {ARCHETYPE_MIN_BB} competitive batted balls stay unclassified "
-        "and the contact cells are blank. "
+        f"Hitters with fewer than {ARCHETYPE_MIN_BB} competitive batted balls stay unclassified. "
+        "The contact cell still shows the barrel or damage rate the exit-velocity rule would use, "
+        "in italic gray, because the sample is too small. "
         "The superscript 1 marks Brooks Lee, Luke Keaschall, and Byron Buxton. "
         "Brooks Lee is the damage example. Luke Keaschall is the barrel example. "
         "Byron Buxton is Damage because he is a power and high-exit-velocity hitter. "
@@ -1931,8 +1956,11 @@ def main() -> None:
         f"White band is within {BAND:.0%} of the comparison league rate, inclusive "
         f"(ratio 0.90 to 1.10). Overall Execution is white within 1.5 percentage points of the league composite. "
         "Overall Execution averages the RISP, move-over, and QAB rates that exist. "
-        f"Small sample: under {SMALL_BB} tracked batted balls for contact quality; "
-        f"under {SMALL_N} in-zone swings, out-of-zone pitches, or plate-appearance opportunities "
+        "Italic gray = sample size too small. "
+        f"Small sample: under {SMALL_BB} tracked batted balls for contact quality, and also contact "
+        f"rates for hitters with fewer than {ARCHETYPE_MIN_BB} competitive batted balls. Those contact "
+        "numbers are shown and are not colored green, red, or white. "
+        f"Under {SMALL_N} in-zone swings, out-of-zone pitches, or plate-appearance opportunities "
         "for the other columns. Santurce hitter cards color a continuous blue-to-red magnitude scale "
         "(rateHeatStyle in pregame.html). This sheet uses the requested direction instead: "
         "white at the league band, green when the rate is better, red when it is worse. "
@@ -1960,7 +1988,9 @@ def main() -> None:
     blank_note = (
         "Cells are blank when the denominator is zero. Overall Execution is blank only when RISP knock-in, "
         "move-over, and QAB are all missing. A hitter with no plate appearances in the selected month is left off that month, with no zero rates. "
-        f"Archetype contact cells are blank when the hitter has fewer than {ARCHETYPE_MIN_BB} competitive batted balls. "
+        f"When a hitter has fewer than {ARCHETYPE_MIN_BB} competitive batted balls, the archetype stays "
+        "unclassified and the contact cell shows the barrel or damage rate in italic gray. "
+        "That cell stays blank only when the window has no tracked batted balls. "
         "No rate was imputed from a nearby player, from a career norm, or from memory."
     )
     chart = []
@@ -2093,6 +2123,8 @@ def write_site(rows: list[dict], month_leagues: dict, league_season: dict, paylo
         "color_note": payload["color_note"],
         "blank_note": payload["blank_note"],
         "subtitle": payload["subtitle"],
+        "il_note": IL_NOTE,
+        "il_omit_ids": IL_OMIT_IDS,
         "hitters_included": payload["hitters_included"],
         "archetypes": payload["archetypes"],
         "roster_audit": payload["roster_audit"],
